@@ -80,9 +80,9 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
       <div><label>試合日</label><input id="gameDate" type="date"></div>
       <div><label>種別</label><select id="gameType"><option>練習試合</option><option>大会</option></select></div>
     </div>
-    <div style="margin-top:9px"><label>大会・シリーズ名</label><input id="tournament" placeholder="例：秋季大会"></div>
-    <div style="margin-top:9px"><label>対戦相手</label><input id="opponent" placeholder="例：△△少年野球"></div>
-    <div style="margin-top:9px"><label>球場</label><input id="ground" placeholder="例：○○グラウンド"></div>
+    <div style="margin-top:9px"><label>大会・シリーズ名</label><input id="tournament" list="tournamentHistory" placeholder="例：秋季大会"></div>
+    <div style="margin-top:9px"><label>対戦相手</label><input id="opponent" list="opponentHistory" placeholder="例：△△少年野球"></div>
+    <div style="margin-top:9px"><label>球場</label><input id="ground" list="groundHistory" placeholder="例：○○グラウンド"></div>
   </div>
   <div class="card">
     <div class="turn"><h2>イニング別スコア</h2><button class="btn ghost mini" onclick="addInning()">＋回を追加</button></div>
@@ -94,6 +94,8 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
     <button class="btn primary full" onclick="saveGame()">保存する</button>
     <button id="cancelEdit" class="btn outline full" style="margin-top:8px;display:none" onclick="cancelEditGame()">編集をやめる</button>
   </div>
+
+<datalist id="tournamentHistory"></datalist><datalist id="opponentHistory"></datalist><datalist id="groundHistory"></datalist>
 </section>
 
 <section id="atbat" class="screen">
@@ -256,7 +258,7 @@ function fmtRate(n){return (Number(n)||0).toFixed(3).replace(/^0/,'')}
 function show(name){
  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(name).classList.add('active');
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));const n=$('nav-'+name);if(n)n.classList.add('active');
- if(name==='home')renderHome();if(name==='game'){renderLineup();renderScoreTable()}if(name==='atbat')renderAtBat();if(name==='pitching')renderPitching();if(name==='stats'){buildFilters();renderStats()}if(name==='players')renderPlayers();if(name==='playerDetail')renderPlayerDetail();
+ if(name==='home')renderHome();if(name==='game'){renderGameHistories();renderLineup();renderScoreTable()}if(name==='atbat')renderAtBat();if(name==='pitching')renderPitching();if(name==='stats'){buildFilters();renderStats()}if(name==='players')renderPlayers();if(name==='playerDetail')renderPlayerDetail();
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function updateHeader(){$('headerTitle').textContent='⚾ '+(state.teamName||'小学生野球チーム')}
@@ -272,6 +274,15 @@ function renderHome(){
  const recent=[...state.games].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,5);
  $('recentGames').innerHTML=recent.length?recent.map(g=>{const s=scoreTotals(g);return `<div class="gamerow"><div><b>${g.date} vs ${escapeHtml(g.opponent)}</b><div class="muted">${escapeHtml(g.tournament||g.type)}・${s.us}-${s.them}</div></div><div class="actions"><button class="btn ghost mini" onclick="openGame('${g.id}')">入力</button><button class="btn outline mini" onclick="editGame('${g.id}')">修正</button></div></div>`}).join(''):`<div class="muted">まだ試合がありません。</div>`;
 }
+
+function renderGameHistories(){
+ const uniq=key=>[...new Set(state.games.map(g=>(g[key]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));
+ const fill=(id,vals)=>{const el=$(id);if(el)el.innerHTML=vals.map(v=>`<option value="${escapeHtml(v)}"></option>`).join('')};
+ fill('tournamentHistory',uniq('tournament'));
+ fill('opponentHistory',uniq('opponent'));
+ fill('groundHistory',uniq('ground'));
+}
+
 function renderLineup(){
  let src=editingGameId?(state.games.find(g=>g.id===editingGameId)?.lineup||[]):state.players.slice(0,9).map((p,i)=>({order:i+1,playerId:p.id,pos:POS[i%9]}));
  if(!src.length) src=Array.from({length:9},(_,i)=>({order:i+1,playerId:state.players[0]?.id||'',pos:POS[i%9]}));
@@ -383,6 +394,21 @@ function renderRanking(){
  const top=arr.filter(x=>type==='avg'||type==='obp'?x.ab>0:true).sort((a,b)=>value(b)-value(a)).slice(0,3);
  $('ranking').innerHTML=top.length?top.map((x,i)=>`<div>${['🥇','🥈','🥉'][i]} ${escapeHtml(x.name)}<b>${type==='avg'||type==='obp'?fmtRate(value(x)):value(x)}</b></div>`).join(''):`<div class="muted" style="grid-column:1/-1">まだランキングはありません</div>`;
 }
+
+function editPlayer(id){
+ const p=state.players.find(x=>x.id===id); if(!p)return;
+ const next=prompt('選手名を修正',p.name);
+ if(next===null)return;
+ const name=next.trim();
+ if(!name){toast('選手名を入力してね');return}
+ if(state.players.some(x=>x.id!==id&&x.name===name)){toast('同じ選手名が登録されています');return}
+ p.name=name;
+ persist();
+ renderPlayers();
+ if(detailPlayerId===id) renderPlayerDetail();
+ toast('選手名を変更しました');
+}
+
 function renderPlayers(){$('playerList').innerHTML=state.players.map(p=>`<div class="playerrow"><button onclick="openPlayer('${p.id}')" style="border:0;background:none;font-weight:900;color:var(--blue);font-size:14px;padding:0">${escapeHtml(p.name)}</button><button class="btn danger mini" onclick="removePlayer('${p.id}')">削除</button></div>`).join('')||'<div class="muted">選手を追加してください。</div>'}
 function addPlayer(){const n=$('newPlayer').value.trim();if(!n)return;state.players.push({id:'p'+Date.now(),name:n});$('newPlayer').value='';persist();renderPlayers();toast('追加しました')}
 function removePlayer(id){
