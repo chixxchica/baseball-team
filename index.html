@@ -409,7 +409,7 @@ function editPlayer(id){
  toast('選手名を変更しました');
 }
 
-function renderPlayers(){$('playerList').innerHTML=state.players.map(p=>`<div class="playerrow"><button onclick="openPlayer('${p.id}')" style="border:0;background:none;font-weight:900;color:var(--blue);font-size:14px;padding:0">${escapeHtml(p.name)}</button><button class="btn danger mini" onclick="removePlayer('${p.id}')">削除</button></div>`).join('')||'<div class="muted">選手を追加してください。</div>'}
+function renderPlayers(){$('playerList').innerHTML=state.players.map(p=>`<div class="playerrow"><button onclick="openPlayer('${p.id}')" style="border:0;background:none;font-weight:900;color:var(--blue);font-size:14px;padding:0">${escapeHtml(p.name)}</button><div class="actions"><button class="btn ghost mini" onclick="editPlayer('${p.id}')">編集</button><button class="btn danger mini" onclick="removePlayer('${p.id}')">削除</button></div></div>`).join('')||'<div class="muted">選手を追加してください。</div>'}
 function addPlayer(){const n=$('newPlayer').value.trim();if(!n)return;state.players.push({id:'p'+Date.now(),name:n});$('newPlayer').value='';persist();renderPlayers();toast('追加しました')}
 function removePlayer(id){
  if(state.atbats.some(a=>a.playerId===id)){toast('成績データがある選手は削除できません');return}
