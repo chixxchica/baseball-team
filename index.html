@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="野球チーム記録">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest?v=111">
+<link rel="apple-touch-icon" href="icon-192.png?v=111">
 <title>小学生野球チーム記録</title>
 <style>
 :root{
@@ -65,7 +65,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
 <body>
 <div class="app">
 <header>
-  <div class="top"><div><b id="headerTitle">⚾ 小学生野球チーム記録</b><small>チーム記録・Ver.1.1<br><span style="font-size:.9em;opacity:.9">入力は簡単。あとから詳しく見られる</span></small></div><button onclick="openSettings()">設定</button></div>
+  <div class="top"><div><b id="headerTitle">⚾ 小学生野球チーム記録</b><small>チーム記録・Ver.1.1.1<br><span style="font-size:.9em;opacity:.9">入力は簡単。あとから詳しく見られる</span><br><span style="font-size:11px;opacity:.72">Build 2026-09-24</span></small></div><button onclick="openSettings()">設定</button></div>
 </header>
 <main>
 <section id="home" class="screen active">
@@ -409,7 +409,7 @@ function editPlayer(id){
  toast('選手名を変更しました');
 }
 
-function renderPlayers(){$('playerList').innerHTML=state.players.map(p=>`<div class="playerrow"><button onclick="openPlayer('${p.id}')" style="border:0;background:none;font-weight:900;color:var(--blue);font-size:14px;padding:0">${escapeHtml(p.name)}</button><div class="actions"><button class="btn ghost mini" onclick="editPlayer('${p.id}')">編集</button><button class="btn danger mini" onclick="removePlayer('${p.id}')">削除</button></div></div>`).join('')||'<div class="muted">選手を追加してください。</div>'}
+function renderPlayers(){$('playerList').innerHTML=state.players.map(p=>`<div class="playerrow"><button onclick="openPlayer('${p.id}')" style="border:0;background:none;font-weight:900;color:var(--blue);font-size:14px;padding:0;text-align:left">${escapeHtml(p.name)}</button><div class="actions"><button class="btn outline mini" onclick="editPlayer('${p.id}')">✏️ 編集</button><button class="btn danger mini" onclick="removePlayer('${p.id}')">削除</button></div></div>`).join('')||'<div class="muted">選手を追加してください。</div>'}
 function addPlayer(){const n=$('newPlayer').value.trim();if(!n)return;state.players.push({id:'p'+Date.now(),name:n});$('newPlayer').value='';persist();renderPlayers();toast('追加しました')}
 function removePlayer(id){
  if(state.atbats.some(a=>a.playerId===id)){toast('成績データがある選手は削除できません');return}
