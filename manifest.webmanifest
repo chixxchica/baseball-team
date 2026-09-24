@@ -1,11 +1,11 @@
 {
-  "name": "小学生野球チーム記録 Ver.1.1.1",
+  "name": "小学生野球チーム記録 Ver.1.1.2",
   "short_name": "チーム野球",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f6f7fb",
-  "theme_color": "#173f8a",
+  "theme_color": "#0b4da2",
   "icons": [
     {
       "src": "icon-192.png",
