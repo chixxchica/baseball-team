@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="野球チーム記録">
-<link rel="manifest" href="manifest.webmanifest?v=113">
-<link rel="apple-touch-icon" href="icon-192.png?v=113">
+<link rel="manifest" href="manifest.webmanifest?v=115">
+<link rel="apple-touch-icon" href="icon-192.png?v=115">
 <title>小学生野球チーム記録</title>
 <style>
 :root{
@@ -59,7 +59,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
 .sheet{width:100%;max-width:680px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom))}
 .note{background:var(--yellow);border:1px solid #f2df83;border-radius:12px;padding:10px 12px;font-size:12px}
 .filebtn{display:block;text-align:center;position:relative;overflow:hidden}.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-#gameDate{
+#gameDate,#fromDate,#toDate{
   display:block;
   width:100%;
   max-width:100%;
@@ -69,7 +69,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
   line-height:21px;
 }
 @supports (-webkit-touch-callout:none){
-  #gameDate{-webkit-appearance:none;appearance:none;}
+  #gameDate,#fromDate,#toDate{-webkit-appearance:none;appearance:none;}
 }
 @media (max-width:420px){.kpi{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}.rank{grid-template-columns:1fr 1fr 1fr}}
 </style>
@@ -77,7 +77,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
 <body>
 <div class="app">
 <header>
-  <div class="top"><div><b id="headerTitle">⚾ 小学生野球チーム記録</b><small>チーム記録・Ver.1.1.4<br><span style="font-size:.9em;opacity:.9">入力は簡単。あとから詳しく見られる</span><br><span style="font-size:11px;opacity:.72">Build 2026-09-26</span></small></div><button onclick="openSettings()">設定</button></div>
+  <div class="top"><div><b id="headerTitle">⚾ 小学生野球チーム記録</b><small>チーム記録・Ver.1.1.5<br><span style="font-size:.9em;opacity:.9">入力は簡単。あとから詳しく見られる</span><br><span style="font-size:11px;opacity:.72">Build 2026-09-28</span></small></div><button onclick="openSettings()">設定</button></div>
 </header>
 <main>
 <section id="home" class="screen active">
@@ -92,6 +92,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
       <div><label>試合日</label><input id="gameDate" type="date"></div>
       <div><label>種別</label><select id="gameType"><option>練習試合</option><option>大会</option></select></div>
     </div>
+    <div style="margin-top:9px"><label>同日の試合</label><select id="gameNo"><option value="1">第1試合</option><option value="2">第2試合</option><option value="3">第3試合</option><option value="4">第4試合</option></select></div>
     <div style="margin-top:9px"><label>大会・シリーズ名</label><input id="tournament" list="tournamentHistory" placeholder="例：秋季大会"></div>
     <div style="margin-top:9px"><label>対戦相手</label><input id="opponent" list="opponentHistory" placeholder="例：△△少年野球"></div>
     <div style="margin-top:9px"><label>球場</label><input id="ground" list="groundHistory" placeholder="例：○○グラウンド"></div>
@@ -128,6 +129,9 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
       <div class="counter">盗塁<b id="sb">0</b><button onclick="chg('sb',-1)">−</button> <button onclick="chg('sb',1)">＋</button></div>
       <div class="counter">得点<b id="run">0</b><button onclick="chg('run',-1)">−</button> <button onclick="chg('run',1)">＋</button></div>
     </div>
+    <div style="margin-top:12px"><label>打席開始時の走者（任意）</label><div class="actions"><label><input id="runner1" type="checkbox" style="width:auto"> 1塁</label><label><input id="runner2" type="checkbox" style="width:auto"> 2塁</label><label><input id="runner3" type="checkbox" style="width:auto"> 3塁</label></div></div>
+    <div style="margin-top:10px"><label>打球方向（任意）</label><select id="direction"><option value="">未入力</option><option>左</option><option>左中</option><option>中</option><option>右中</option><option>右</option></select></div>
+    <div style="margin-top:10px"><label>打席メモ（任意）</label><input id="atbatMemo" placeholder="例：強い当たり、三遊間など"></div>
     <button class="btn primary full" style="margin-top:10px" onclick="saveAtBat()">保存 → 次の打者へ</button>
   </div>
   <div class="card"><h2>この試合の記録</h2><div id="gameLog"></div></div>
@@ -175,10 +179,10 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
     <div class="turn"><h2>チーム成績一覧</h2><span class="badge">選手名をタップ</span></div>
     <div class="scroll"><table><thead><tr>
       <th>選手</th><th>試合</th><th>打席</th><th>打数</th><th>安打</th><th>2B</th><th>3B</th><th>HR</th>
-      <th>打点</th><th>得点</th><th>盗塁</th><th>四球</th><th>死球</th><th>三振</th><th>ゴロ</th><th>フライ</th><th>打率</th><th>出塁率</th>
+      <th>打点</th><th>得点</th><th>盗塁</th><th>四球</th><th>死球</th><th>三振</th><th>ゴロ</th><th>フライ</th><th>打率</th><th>出塁率</th><th>長打率</th><th>OPS</th><th>得点圏</th>
     </tr></thead><tbody id="statsBody"></tbody></table></div>
   </div>
-  <div class="card"><div class="turn"><h2>ランキング</h2><select id="rankType" style="width:auto" onchange="renderRanking()"><option value="avg">打率</option><option value="h">安打</option><option value="rbi">打点</option><option value="sb">盗塁</option><option value="obp">出塁率</option></select></div><div class="rank" id="ranking"></div></div>
+  <div class="card"><div class="turn"><h2>ランキング</h2><select id="rankType" style="width:auto" onchange="renderRanking()"><option value="avg">打率</option><option value="h">安打</option><option value="rbi">打点</option><option value="sb">盗塁</option><option value="obp">出塁率</option><option value="slg">長打率</option><option value="ops">OPS</option><option value="rispAvg">得点圏打率</option></select></div><div class="rank" id="ranking"></div></div>
 </section>
 
 <section id="players" class="screen">
@@ -225,7 +229,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
 <div class="modal" id="editAtBatModal"><div class="sheet">
 <div class="turn"><h2>打席記録を修正</h2><button class="btn ghost mini" onclick="closeEditAtBat()">閉じる</button></div>
 <div class="banner" id="editAtBatWho"></div><label>打席結果</label><select id="editAtBatResult"></select>
-<div class="grid3" style="margin-top:10px"><div><label>打点</label><input id="editAtBatRbi" type="number" min="0"></div><div><label>盗塁</label><input id="editAtBatSb" type="number" min="0"></div><div><label>得点</label><input id="editAtBatRun" type="number" min="0"></div></div>
+<div class="grid3" style="margin-top:10px"><div><label>打点</label><input id="editAtBatRbi" type="number" min="0"></div><div><label>盗塁</label><input id="editAtBatSb" type="number" min="0"></div><div><label>得点</label><input id="editAtBatRun" type="number" min="0"></div></div><div style="margin-top:10px"><label>打席開始時の走者</label><div class="actions"><label><input id="editRunner1" type="checkbox" style="width:auto"> 1塁</label><label><input id="editRunner2" type="checkbox" style="width:auto"> 2塁</label><label><input id="editRunner3" type="checkbox" style="width:auto"> 3塁</label></div></div><div style="margin-top:10px"><label>打球方向</label><select id="editDirection"><option value="">未入力</option><option>左</option><option>左中</option><option>中</option><option>右中</option><option>右</option></select></div><div style="margin-top:10px"><label>打席メモ</label><input id="editMemo"></div>
 <button class="btn primary full" style="margin-top:12px" onclick="saveEditedAtBat()">修正を保存</button></div></div>
 
 <div class="modal" id="settingsModal">
@@ -283,15 +287,16 @@ function show(name){
 function updateHeader(){$('headerTitle').textContent='⚾ '+(state.teamName||'小学生野球チーム')}
 function resetGameForm(){
  editingGameId=null;inningCount=6;$('gameFormTitle').textContent='試合登録';$('editBadge').style.display='none';$('cancelEdit').style.display='none';
- $('gameDate').value=new Date().toISOString().slice(0,10);$('gameType').value='練習試合';$('tournament').value='';$('opponent').value='';$('ground').value='';
+ $('gameDate').value=new Date().toISOString().slice(0,10);$('gameType').value='練習試合';$('gameNo').value='1';$('tournament').value='';$('opponent').value='';$('ground').value='';
 }
 function newGame(){resetGameForm();show('game')}
 function scoreTotals(g){const us=(g.score?.us||[]).reduce((a,b)=>a+(+b||0),0),them=(g.score?.them||[]).reduce((a,b)=>a+(+b||0),0);return {us,them}}
+function gameLabelText(g){return `${g.date} 第${g.gameNo||1}試合 vs ${g.opponent}`}
 function renderHome(){
  const all=aggregate(state.atbats),ab=all.reduce((s,x)=>s+x.ab,0),h=all.reduce((s,x)=>s+x.h,0);
  $('homeMetrics').innerHTML=`<div class="metric"><span>試合</span><b>${state.games.length}</b></div><div class="metric"><span>打数</span><b>${ab}</b></div><div class="metric"><span>チーム打率</span><b>${ab?fmtRate(h/ab):'.000'}</b></div>`;
  const recent=[...state.games].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,5);
- $('recentGames').innerHTML=recent.length?recent.map(g=>{const s=scoreTotals(g);return `<div class="gamerow"><div><b>${g.date} vs ${escapeHtml(g.opponent)}</b><div class="muted">${escapeHtml(g.tournament||g.type)}・${s.us}-${s.them}</div></div><div class="actions"><button class="btn ghost mini" onclick="openGame('${g.id}')">入力</button><button class="btn outline mini" onclick="editGame('${g.id}')">修正</button><button class="btn danger mini" onclick="deleteGame('${g.id}')">削除</button></div></div>`}).join(''):`<div class="muted">まだ試合がありません。</div>`;
+ $('recentGames').innerHTML=recent.length?recent.map(g=>{const s=scoreTotals(g);return `<div class="gamerow"><div><b>${g.date} 第${g.gameNo||1}試合 vs ${escapeHtml(g.opponent)}</b><div class="muted">${escapeHtml(g.tournament||g.type)}・${s.us}-${s.them}</div></div><div class="actions"><button class="btn ghost mini" onclick="openGame('${g.id}')">入力</button><button class="btn outline mini" onclick="editGame('${g.id}')">修正</button><button class="btn danger mini" onclick="deleteGame('${g.id}')">削除</button></div></div>`}).join(''):`<div class="muted">まだ試合がありません。</div>`;
 }
 
 function renderGameHistories(){
@@ -322,20 +327,20 @@ function saveGame(){
  if(!$('gameDate').value||!$('opponent').value.trim()){toast('試合日と対戦相手を入力してね');return}
  if(state.players.length===0){toast('先に選手を登録してね');return}
  const lineup=[...document.querySelectorAll('[data-p]')].map((el,i)=>({order:i+1,playerId:el.value,pos:document.querySelector(`[data-pos="${i}"]`).value}));
- const data={date:$('gameDate').value,type:$('gameType').value,tournament:$('tournament').value.trim(),opponent:$('opponent').value.trim(),ground:$('ground').value.trim(),lineup,score:collectScore()};
+ const data={date:$('gameDate').value,gameNo:+$('gameNo').value||1,type:$('gameType').value,tournament:$('tournament').value.trim(),opponent:$('opponent').value.trim(),ground:$('ground').value.trim(),lineup,score:collectScore()};
  if(editingGameId){Object.assign(state.games.find(g=>g.id===editingGameId),data);activeGameId=editingGameId;persist();toast('試合を修正しました');cancelEditGame();show('home')}
  else{const g={id:'g'+Date.now(),currentOrder:1,subs:[],...data};state.games.push(g);activeGameId=g.id;persist();toast('試合を保存しました');show('atbat')}
 }
 function editGame(id){
  const g=state.games.find(x=>x.id===id);if(!g)return;editingGameId=id;$('gameFormTitle').textContent='過去試合を修正';$('editBadge').style.display='inline-block';$('cancelEdit').style.display='block';
- $('gameDate').value=g.date;$('gameType').value=g.type;$('tournament').value=g.tournament||'';$('opponent').value=g.opponent;$('ground').value=g.ground||'';inningCount=Math.max(6,g.score?.us?.length||0);show('game');
+ $('gameDate').value=g.date;$('gameNo').value=String(g.gameNo||1);$('gameType').value=g.type;$('tournament').value=g.tournament||'';$('opponent').value=g.opponent;$('ground').value=g.ground||'';inningCount=Math.max(6,g.score?.us?.length||0);show('game');
 }
 function cancelEditGame(){resetGameForm();show('home')}
 function deleteGame(id){
  const g=state.games.find(x=>x.id===id);if(!g)return;
  const atbatCount=state.atbats.filter(a=>a.gameId===id).length;
  const pitchingCount=state.pitching.filter(p=>p.gameId===id).length;
- const label=`${g.date} vs ${g.opponent}`;
+ const label=`${g.date} 第${g.gameNo||1}試合 vs ${g.opponent}`;
  if(!confirm(`${label} を削除しますか？\n\nこの試合の打席記録（${atbatCount}件）・投手成績（${pitchingCount}件）・イニングスコアもまとめて削除されます。\nこの操作は元に戻せません。`))return;
  state.games=state.games.filter(x=>x.id!==id);
  state.atbats=state.atbats.filter(a=>a.gameId!==id);
@@ -349,29 +354,29 @@ function activeGame(){return state.games.find(g=>g.id===activeGameId)||state.gam
 function changeAtBatGame(id){if(!state.games.some(g=>g.id===id))return;activeGameId=id;selectedResult=null;resetCounts();renderAtBat();}
 function currentSlot(g){return g?.lineup.find(x=>x.order===g.currentOrder)}
 function renderAtBat(){
- const sel=$('atbatGameSelect');if(sel)sel.innerHTML=state.games.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>`<option value="${x.id}">${x.date} vs ${escapeHtml(x.opponent)}</option>`).join('');
+ const sel=$('atbatGameSelect');if(sel)sel.innerHTML=state.games.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>`<option value="${x.id}">${x.date} 第${x.gameNo||1}試合 vs ${escapeHtml(x.opponent)}</option>`).join('');
  const g=activeGame();if(!g){$('gameLabel').textContent='先に試合を登録してください';$('nextBatter').textContent='-';$('nextMeta').textContent='';$('resultGrid').innerHTML='';$('gameLog').innerHTML='';return}
  activeGameId=g.id;if(sel)sel.value=g.id;const slot=currentSlot(g),p=state.players.find(x=>x.id===slot?.playerId),s=scoreTotals(g);
- $('gameLabel').textContent=`${g.date} vs ${g.opponent} ｜ ${g.tournament||g.type} ｜ ${s.us}-${s.them}`;
+ $('gameLabel').textContent=`${g.date} 第${g.gameNo||1}試合 vs ${g.opponent} ｜ ${g.tournament||g.type} ｜ ${s.us}-${s.them}`;
  $('nextBatter').textContent=p?.name||'選手';$('nextMeta').textContent=slot?`${slot.order}番・守備 ${slot.pos}`:'';
  $('resultGrid').innerHTML=RESULTS.map(r=>`<button class="result ${selectedResult===r.k?'active':''}" onclick="pickResult('${r.k}')">${r.l}</button>`).join('');renderLog();
 }
 function pickResult(k){selectedResult=k;renderAtBat()}
 function chg(id,d){const e=$(id);e.textContent=Math.max(0,+e.textContent+d)}
-function resetCounts(){['rbi','sb','run'].forEach(id=>$(id).textContent=0)}
+function resetCounts(){['rbi','sb','run'].forEach(id=>$(id).textContent=0);['runner1','runner2','runner3'].forEach(id=>{if($(id))$(id).checked=false});if($('direction'))$('direction').value='';if($('atbatMemo'))$('atbatMemo').value=''}
 function advanceBatter(){const g=activeGame();if(!g)return;g.currentOrder=g.currentOrder>=g.lineup.length?1:g.currentOrder+1;persist();selectedResult=null;resetCounts();renderAtBat()}
 function saveAtBat(){
  const g=activeGame(),slot=currentSlot(g);if(!g||!slot||!selectedResult){toast('打席結果を選んでね');return}
- state.atbats.push({id:'a'+Date.now(),gameId:g.id,playerId:slot.playerId,order:slot.order,pos:slot.pos,result:selectedResult,rbi:+$('rbi').textContent,sb:+$('sb').textContent,run:+$('run').textContent});
+ state.atbats.push({id:'a'+Date.now(),gameId:g.id,playerId:slot.playerId,order:slot.order,pos:slot.pos,result:selectedResult,rbi:+$('rbi').textContent,sb:+$('sb').textContent,run:+$('run').textContent,runners:{r1:$('runner1').checked,r2:$('runner2').checked,r3:$('runner3').checked},direction:$('direction').value,memo:$('atbatMemo').value.trim()});
  g.currentOrder=g.currentOrder>=g.lineup.length?1:g.currentOrder+1;selectedResult=null;resetCounts();persist();renderAtBat();toast('保存しました');
 }
 function renderLog(){
  const logs=state.atbats.filter(a=>a.gameId===activeGameId).slice().reverse().slice(0,30);
- $('gameLog').innerHTML=logs.length?logs.map(a=>{const p=state.players.find(x=>x.id===a.playerId),r=RESULTS.find(x=>x.k===a.result);return `<div class="logrow"><div><b>${a.order}番 ${escapeHtml(p?.name||'選手')}</b><div class="muted">${r?.l}・打点${a.rbi}・盗塁${a.sb}・得点${a.run}</div></div><div class="actions"><button class="btn outline mini" onclick="editAtBat('${a.id}')">✏️ 編集</button><button class="btn danger mini" onclick="deleteAB('${a.id}')">削除</button></div></div>`}).join(''):`<div class="muted">まだ打席記録がありません。</div>`;
+ $('gameLog').innerHTML=logs.length?logs.map(a=>{const p=state.players.find(x=>x.id===a.playerId),r=RESULTS.find(x=>x.k===a.result);return `<div class="logrow"><div><b>${a.order}番 ${escapeHtml(p?.name||'選手')}</b><div class="muted">${r?.l}・打点${a.rbi}・盗塁${a.sb}・得点${a.run}${a.direction?'・'+escapeHtml(a.direction):''}${a.memo?'・'+escapeHtml(a.memo):''}</div></div><div class="actions"><button class="btn outline mini" onclick="editAtBat('${a.id}')">✏️ 編集</button><button class="btn danger mini" onclick="deleteAB('${a.id}')">削除</button></div></div>`}).join(''):`<div class="muted">まだ打席記録がありません。</div>`;
 }
-function editAtBat(id){const a=state.atbats.find(x=>x.id===id);if(!a)return;editingAtBatId=id;const p=state.players.find(x=>x.id===a.playerId),g=state.games.find(x=>x.id===a.gameId);$('editAtBatWho').textContent=`${g?.date||''} ${g?'vs '+g.opponent:''} ｜ ${a.order}番 ${p?.name||'選手'}`;$('editAtBatResult').innerHTML=RESULTS.map(r=>`<option value="${r.k}" ${r.k===a.result?'selected':''}>${r.l}</option>`).join('');$('editAtBatRbi').value=a.rbi||0;$('editAtBatSb').value=a.sb||0;$('editAtBatRun').value=a.run||0;$('editAtBatModal').classList.add('active')}
+function editAtBat(id){const a=state.atbats.find(x=>x.id===id);if(!a)return;editingAtBatId=id;const p=state.players.find(x=>x.id===a.playerId),g=state.games.find(x=>x.id===a.gameId);$('editAtBatWho').textContent=`${g?.date||''} ${g?'vs '+g.opponent:''} ｜ ${a.order}番 ${p?.name||'選手'}`;$('editAtBatResult').innerHTML=RESULTS.map(r=>`<option value="${r.k}" ${r.k===a.result?'selected':''}>${r.l}</option>`).join('');$('editAtBatRbi').value=a.rbi||0;$('editAtBatSb').value=a.sb||0;$('editAtBatRun').value=a.run||0;$('editRunner1').checked=!!a.runners?.r1;$('editRunner2').checked=!!a.runners?.r2;$('editRunner3').checked=!!a.runners?.r3;$('editDirection').value=a.direction||'';$('editMemo').value=a.memo||'';$('editAtBatModal').classList.add('active')}
 function closeEditAtBat(){editingAtBatId=null;$('editAtBatModal').classList.remove('active')}
-function saveEditedAtBat(){const a=state.atbats.find(x=>x.id===editingAtBatId);if(!a)return;a.result=$('editAtBatResult').value;a.rbi=Math.max(0,+$('editAtBatRbi').value||0);a.sb=Math.max(0,+$('editAtBatSb').value||0);a.run=Math.max(0,+$('editAtBatRun').value||0);persist();closeEditAtBat();renderAtBat();toast('打席記録を修正しました')}
+function saveEditedAtBat(){const a=state.atbats.find(x=>x.id===editingAtBatId);if(!a)return;a.result=$('editAtBatResult').value;a.rbi=Math.max(0,+$('editAtBatRbi').value||0);a.sb=Math.max(0,+$('editAtBatSb').value||0);a.run=Math.max(0,+$('editAtBatRun').value||0);a.runners={r1:$('editRunner1').checked,r2:$('editRunner2').checked,r3:$('editRunner3').checked};a.direction=$('editDirection').value;a.memo=$('editMemo').value.trim();persist();closeEditAtBat();renderAtBat();toast('打席記録を修正しました')}
 function deleteAB(id){if(!confirm('この打席を削除しますか？'))return;state.atbats=state.atbats.filter(a=>a.id!==id);persist();renderAtBat();toast('削除しました')}
 function openSubModal(){
  const g=activeGame();if(!g){toast('試合を登録してね');return}
@@ -385,7 +390,7 @@ function applySub(){const g=activeGame(),order=+$('subOrder').value,slot=g.lineu
 function inningsToOuts(v){const x=String(v??'').trim();if(!x)return 0;if(x.includes('.')){const [w,f='0']=x.split('.');return (parseInt(w)||0)*3+Math.min(2,parseInt(f)||0)}return Math.round((parseFloat(x)||0)*3)}
 function outsToInnings(o){o=Number(o)||0;return `${Math.floor(o/3)}${o%3?'.'+(o%3):''}`}
 function renderPitching(){
- $('pitchGame').innerHTML=state.games.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(g=>`<option value="${g.id}">${g.date} vs ${escapeHtml(g.opponent)}</option>`).join('');
+ $('pitchGame').innerHTML=state.games.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(g=>`<option value="${g.id}">${g.date} 第${g.gameNo||1}試合 vs ${escapeHtml(g.opponent)}</option>`).join('');
  if(activeGameId&&state.games.some(g=>g.id===activeGameId))$('pitchGame').value=activeGameId;
  $('pitchPlayer').innerHTML=state.players.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
  const agg={};state.pitching.forEach(r=>{const p=state.players.find(x=>x.id===r.playerId),id=r.playerId;if(!agg[id])agg[id]={name:p?.name||r.playerName||'過去選手',apps:0,outs:0,pc:0,h:0,so:0,bb:0,hbp:0,r:0,er:0};const x=agg[id];x.apps++;x.outs+=r.outs||0;x.pc+=r.pc||0;x.h+=r.h||0;x.so+=r.so||0;x.bb+=r.bb||0;x.hbp+=r.hbp||0;x.r+=r.r||0;x.er+=r.er||0});
@@ -397,7 +402,7 @@ function deletePitch(id){if(!confirm('この投手記録を削除しますか？
 function csvEscape(v){v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function downloadPitchTemplate(){const h=['試合日','対戦相手','選手名','投球回','投球数','打者数','被安打','被本塁打','奪三振','与四球','与死球','失点','自責点'],e=['2026-09-23','△△少年野球','玲翔','3.2','58','17','3','0','5','2','0','2','1'];const csv='\ufeff'+h.map(csvEscape).join(',')+'\n'+e.map(csvEscape).join(',');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='投手成績_取込ひな形.csv';a.click();URL.revokeObjectURL(a.href)}
 function parseCSV(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);if(row.some(x=>x!==''))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell);if(row.some(x=>x!==''))rows.push(row);return rows}
-function importPitchCSV(ev){const f=ev.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{try{const rows=parseCSV(String(reader.result).replace(/^\ufeff/,'')),h=rows[0].map(x=>x.trim()),idx=n=>h.indexOf(n);if(['試合日','対戦相手','選手名','投球回'].some(n=>idx(n)<0))throw new Error();let count=0;rows.slice(1).forEach((r,i)=>{const date=(r[idx('試合日')]||'').trim(),opp=(r[idx('対戦相手')]||'').trim(),name=(r[idx('選手名')]||'').trim();if(!date||!name)return;let player=state.players.find(p=>p.name===name);if(!player){player={id:'p'+Date.now()+i,name};state.players.push(player)}let game=state.games.find(g=>g.date===date&&g.opponent===opp);if(!game){game={id:'gcsv'+Date.now()+i,date,type:'大会',tournament:'CSV取込',opponent:opp||'対戦相手未入力',ground:'',lineup:[],score:{us:[],them:[]},currentOrder:1,subs:[]};state.games.push(game)}const val=n=>idx(n)>=0?(+r[idx(n)]||0):0;state.pitching.push({id:'ptcsv'+Date.now()+i,gameId:game.id,playerId:player.id,outs:inningsToOuts(r[idx('投球回')]),pc:val('投球数'),bf:val('打者数'),h:val('被安打'),hr:val('被本塁打'),so:val('奪三振'),bb:val('与四球'),hbp:val('与死球'),r:val('失点'),er:val('自責点')});count++});persist();renderPitching();toast(`${count}件の投手成績を取り込みました`)}catch(e){toast('CSV形式を確認してください')}};reader.readAsText(f,'UTF-8');ev.target.value=''}
+function importPitchCSV(ev){const f=ev.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{try{const rows=parseCSV(String(reader.result).replace(/^\ufeff/,'')),h=rows[0].map(x=>x.trim()),idx=n=>h.indexOf(n);if(['試合日','対戦相手','選手名','投球回'].some(n=>idx(n)<0))throw new Error();let count=0;rows.slice(1).forEach((r,i)=>{const date=(r[idx('試合日')]||'').trim(),opp=(r[idx('対戦相手')]||'').trim(),name=(r[idx('選手名')]||'').trim();if(!date||!name)return;let player=state.players.find(p=>p.name===name);if(!player){player={id:'p'+Date.now()+i,name};state.players.push(player)}let game=state.games.find(g=>g.date===date&&g.opponent===opp);if(!game){game={id:'gcsv'+Date.now()+i,date,gameNo:1,type:'大会',tournament:'CSV取込',opponent:opp||'対戦相手未入力',ground:'',lineup:[],score:{us:[],them:[]},currentOrder:1,subs:[]};state.games.push(game)}const val=n=>idx(n)>=0?(+r[idx(n)]||0):0;state.pitching.push({id:'ptcsv'+Date.now()+i,gameId:game.id,playerId:player.id,outs:inningsToOuts(r[idx('投球回')]),pc:val('投球数'),bf:val('打者数'),h:val('被安打'),hr:val('被本塁打'),so:val('奪三振'),bb:val('与四球'),hbp:val('与死球'),r:val('失点'),er:val('自責点')});count++});persist();renderPitching();toast(`${count}件の投手成績を取り込みました`)}catch(e){toast('CSV形式を確認してください')}};reader.readAsText(f,'UTF-8');ev.target.value=''}
 
 function buildFilters(){
  const tcur=$('filterTournament').value||'all',ocur=$('filterOrder').value||'all',pcur=$('filterPos').value||'all';
@@ -415,21 +420,21 @@ function filteredAtBats(){
  return state.atbats.filter(a=>{const g=state.games.find(x=>x.id===a.gameId);if(!g)return false;const gt=g.tournament||g.type;return (t==='all'||gt===t)&&(o==='all'||String(a.order)===o)&&(p==='all'||a.pos===p)&&(!from||g.date>=from)&&(!to||g.date<=to)})
 }
 function aggregate(src){
- const m={};state.players.forEach(p=>m[p.id]={id:p.id,name:p.name,games:new Set(),pa:0,ab:0,h:0,d2:0,d3:0,hr:0,rbi:0,run:0,sb:0,bb:0,hbp:0,k:0,go:0,fo:0});
- src.forEach(a=>{if(!m[a.playerId])m[a.playerId]={id:a.playerId,name:'過去選手',games:new Set(),pa:0,ab:0,h:0,d2:0,d3:0,hr:0,rbi:0,run:0,sb:0,bb:0,hbp:0,k:0,go:0,fo:0};
- const x=m[a.playerId],r=RESULTS.find(z=>z.k===a.result);x.games.add(a.gameId);x.pa++;x.ab+=r?.ab||0;x.h+=r?.h||0;if(a.result==='2B')x.d2++;if(a.result==='3B')x.d3++;if(a.result==='HR')x.hr++;if(a.result==='BB')x.bb++;if(a.result==='HBP')x.hbp++;if(a.result==='K')x.k++;if(a.result==='GO')x.go++;if(a.result==='FO')x.fo++;x.rbi+=a.rbi||0;x.run+=a.run||0;x.sb+=a.sb||0});
- return Object.values(m).filter(x=>x.pa>0).map(x=>({...x,avg:x.ab?x.h/x.ab:0,obp:(x.ab+x.bb+x.hbp)?(x.h+x.bb+x.hbp)/(x.ab+x.bb+x.hbp):0}))
+ const blank=(id,name)=>({id,name,games:new Set(),pa:0,ab:0,h:0,d2:0,d3:0,hr:0,rbi:0,run:0,sb:0,bb:0,hbp:0,k:0,go:0,fo:0,tb:0,rispAb:0,rispH:0});
+ const m={};state.players.forEach(p=>m[p.id]=blank(p.id,p.name));
+ src.forEach(a=>{if(!m[a.playerId])m[a.playerId]=blank(a.playerId,'過去選手');const x=m[a.playerId],r=RESULTS.find(z=>z.k===a.result);x.games.add(a.gameId);x.pa++;x.ab+=r?.ab||0;x.h+=r?.h||0;if(a.result==='1B')x.tb+=1;if(a.result==='2B'){x.d2++;x.tb+=2}if(a.result==='3B'){x.d3++;x.tb+=3}if(a.result==='HR'){x.hr++;x.tb+=4}if(a.result==='BB')x.bb++;if(a.result==='HBP')x.hbp++;if(a.result==='K')x.k++;if(a.result==='GO')x.go++;if(a.result==='FO')x.fo++;x.rbi+=a.rbi||0;x.run+=a.run||0;x.sb+=a.sb||0;const risp=!!(a.runners?.r2||a.runners?.r3);if(risp&&r?.ab){x.rispAb+=r.ab||0;x.rispH+=r.h||0}});
+ return Object.values(m).filter(x=>x.pa>0).map(x=>{const avg=x.ab?x.h/x.ab:0,obp=(x.ab+x.bb+x.hbp)?(x.h+x.bb+x.hbp)/(x.ab+x.bb+x.hbp):0,slg=x.ab?x.tb/x.ab:0;return {...x,avg,obp,slg,ops:obp+slg,rispAvg:x.rispAb?x.rispH/x.rispAb:0}})
 }
 function renderStats(){
  const arr=aggregate(filteredAtBats());
- $('statsBody').innerHTML=arr.length?arr.map(x=>`<tr><td class="name"><button onclick="openPlayer('${x.id}')" style="border:0;background:none;color:var(--blue);font-weight:900;padding:0">${escapeHtml(x.name)}</button></td><td>${x.games.size}</td><td>${x.pa}</td><td>${x.ab}</td><td>${x.h}</td><td>${x.d2}</td><td>${x.d3}</td><td>${x.hr}</td><td>${x.rbi}</td><td>${x.run}</td><td>${x.sb}</td><td>${x.bb}</td><td>${x.hbp}</td><td>${x.k}</td><td>${x.go}</td><td>${x.fo}</td><td><b>${fmtRate(x.avg)}</b></td><td>${fmtRate(x.obp)}</td></tr>`).join(''):`<tr><td colspan="18">この条件のデータはまだありません</td></tr>`;
+ $('statsBody').innerHTML=arr.length?arr.map(x=>`<tr><td class="name"><button onclick="openPlayer('${x.id}')" style="border:0;background:none;color:var(--blue);font-weight:900;padding:0">${escapeHtml(x.name)}</button></td><td>${x.games.size}</td><td>${x.pa}</td><td>${x.ab}</td><td>${x.h}</td><td>${x.d2}</td><td>${x.d3}</td><td>${x.hr}</td><td>${x.rbi}</td><td>${x.run}</td><td>${x.sb}</td><td>${x.bb}</td><td>${x.hbp}</td><td>${x.k}</td><td>${x.go}</td><td>${x.fo}</td><td><b>${fmtRate(x.avg)}</b></td><td>${fmtRate(x.obp)}</td><td>${fmtRate(x.slg)}</td><td>${fmtRate(x.ops)}</td><td>${x.rispAb?fmtRate(x.rispAvg)+' ('+x.rispH+'/'+x.rispAb+')':'-'}</td></tr>`).join(''):`<tr><td colspan="21">この条件のデータはまだありません</td></tr>`;
  renderRanking();
 }
 function renderRanking(){
  const arr=aggregate(filteredAtBats()),type=$('rankType').value;
- const value=x=>type==='avg'?x.avg:type==='obp'?x.obp:x[type];
- const top=arr.filter(x=>type==='avg'||type==='obp'?x.ab>0:true).sort((a,b)=>value(b)-value(a)).slice(0,3);
- $('ranking').innerHTML=top.length?top.map((x,i)=>`<div>${['🥇','🥈','🥉'][i]} ${escapeHtml(x.name)}<b>${type==='avg'||type==='obp'?fmtRate(value(x)):value(x)}</b></div>`).join(''):`<div class="muted" style="grid-column:1/-1">まだランキングはありません</div>`;
+ const value=x=>['avg','obp','slg','ops','rispAvg'].includes(type)?x[type]:x[type];
+ const top=arr.filter(x=>type==='rispAvg'?x.rispAb>0:['avg','obp','slg','ops'].includes(type)?x.ab>0:true).sort((a,b)=>value(b)-value(a)).slice(0,3);
+ $('ranking').innerHTML=top.length?top.map((x,i)=>`<div>${['🥇','🥈','🥉'][i]} ${escapeHtml(x.name)}<b>${['avg','obp','slg','ops','rispAvg'].includes(type)?fmtRate(value(x)):value(x)}</b></div>`).join(''):`<div class="muted" style="grid-column:1/-1">まだランキングはありません</div>`;
 }
 
 function editPlayer(id){
@@ -457,10 +462,10 @@ function openPlayer(id){detailPlayerId=id;detailTab='all';show('playerDetail')}
 function setDetailTab(tab,el){detailTab=tab;document.querySelectorAll('#playerDetail .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderPlayerDetail()}
 function renderPlayerDetail(){
  const p=state.players.find(x=>x.id===detailPlayerId);if(!p)return;$('detailName').textContent=p.name;
- const src=state.atbats.filter(a=>a.playerId===detailPlayerId),agg=aggregate(src)[0]||{games:new Set(),pa:0,ab:0,h:0,rbi:0,run:0,sb:0,avg:0,obp:0};
+ const src=state.atbats.filter(a=>a.playerId===detailPlayerId),agg=aggregate(src)[0]||{games:new Set(),pa:0,ab:0,h:0,rbi:0,run:0,sb:0,avg:0,obp:0,slg:0,ops:0,rispAb:0,rispH:0,rispAvg:0};
  $('detailAvg').textContent=fmtRate(agg.avg);$('detailKpi').innerHTML=`<div><span class="muted">試合</span><b>${agg.games.size||0}</b></div><div><span class="muted">安打</span><b>${agg.h||0}</b></div><div><span class="muted">打点</span><b>${agg.rbi||0}</b></div><div><span class="muted">盗塁</span><b>${agg.sb||0}</b></div>`;
  if(detailTab==='all'){
-   $('detailBody').innerHTML=`<div class="kpi"><div><span class="muted">打席</span><b>${agg.pa||0}</b></div><div><span class="muted">打数</span><b>${agg.ab||0}</b></div><div><span class="muted">出塁率</span><b>${fmtRate(agg.obp||0)}</b></div><div><span class="muted">得点</span><b>${agg.run||0}</b></div></div>`;
+   $('detailBody').innerHTML=`<div class="kpi"><div><span class="muted">打席</span><b>${agg.pa||0}</b></div><div><span class="muted">打数</span><b>${agg.ab||0}</b></div><div><span class="muted">出塁率</span><b>${fmtRate(agg.obp||0)}</b></div><div><span class="muted">得点</span><b>${agg.run||0}</b></div><div><span class="muted">長打率</span><b>${fmtRate(agg.slg||0)}</b></div><div><span class="muted">OPS</span><b>${fmtRate(agg.ops||0)}</b></div><div><span class="muted">得点圏</span><b>${agg.rispAb?fmtRate(agg.rispAvg):'-'}</b></div></div>`;
  }else if(detailTab==='order'){
    const rows=Array.from({length:9},(_,i)=>{const a=aggregate(src.filter(x=>x.order===i+1))[0];return a?`<div class="playerrow"><div><b>${i+1}番</b><div class="muted">${a.h}安打 / ${a.ab}打数・打点${a.rbi}</div></div><b>${fmtRate(a.avg)}</b></div>`:''}).join('');
    $('detailBody').innerHTML=rows||'<div class="muted">打順別データはありません。</div>';
@@ -469,7 +474,7 @@ function renderPlayerDetail(){
    $('detailBody').innerHTML=prs.length?`<div class="kpi"><div><span class="muted">登板</span><b>${prs.length}</b></div><div><span class="muted">投球回</span><b>${outsToInnings(outs)}</b></div><div><span class="muted">投球数</span><b>${pc}</b></div><div><span class="muted">奪三振</span><b>${so}</b></div><div><span class="muted">防御率</span><b>${era.toFixed(2)}</b></div><div><span class="muted">WHIP</span><b>${whip.toFixed(2)}</b></div></div>`:'<div class="muted">投手成績はまだありません。</div>';
  }else{
    const gids=[...new Set(src.map(a=>a.gameId))];
-   $('detailBody').innerHTML=gids.map(id=>{const g=state.games.find(x=>x.id===id),a=aggregate(src.filter(x=>x.gameId===id))[0];return g&&a?`<div class="playerrow"><div><b>${g.date} vs ${escapeHtml(g.opponent)}</b><div class="muted">${a.h}安打 / ${a.ab}打数・打点${a.rbi}</div></div><b>${fmtRate(a.avg)}</b></div>`:''}).join('')||'<div class="muted">試合別データはありません。</div>';
+   $('detailBody').innerHTML=gids.map(id=>{const g=state.games.find(x=>x.id===id),a=aggregate(src.filter(x=>x.gameId===id))[0];return g&&a?`<div class="playerrow"><div><b>${g.date} 第${g.gameNo||1}試合 vs ${escapeHtml(g.opponent)}</b><div class="muted">${a.h}安打 / ${a.ab}打数・打点${a.rbi}</div></div><b>${fmtRate(a.avg)}</b></div>`:''}).join('')||'<div class="muted">試合別データはありません。</div>';
  }
 }
 function openSettings(){$('teamNameInput').value=state.teamName||'';$('settingsModal').classList.add('active')}
