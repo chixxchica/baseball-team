@@ -78,7 +78,7 @@ nav button{border:0;background:#fff;color:#667085;font-size:10px;padding:6px 2px
 <body>
 <div class="app">
 <header>
-  <div class="top"><div><b id="headerTitle">⚾ 小学生野球チーム記録</b><small>チーム記録・Ver.1.1.6<br><span style="font-size:.9em;opacity:.9">入力は簡単。あとから詳しく見られる</span><br><span style="font-size:11px;opacity:.72">Build 2026-10-11</span></small></div><button onclick="openSettings()">設定</button></div>
+  <div class="top"><div><b id="headerTitle">⚾ 小学生野球チーム記録</b><small>チーム記録・Ver.1.1.7<br><span style="font-size:.9em;opacity:.9">入力は簡単。あとから詳しく見られる</span><br><span style="font-size:11px;opacity:.72">Build 2026-10-11</span></small></div><button onclick="openSettings()">設定</button></div>
 </header>
 <div class="scopebar"><label>表示チーム <select id="scopeTeam" onchange="changeScope()"><option value="high">🔵 高学年</option><option value="low">🟢 低学年</option><option value="all">⚾ 全チーム</option></select></label><label>年度 <select id="scopeYear" onchange="changeScope()"></select></label></div>
 <main>
@@ -283,7 +283,15 @@ function matchScope(g){return !!g&&(scopeTeam==='all'||g.team===scopeTeam)&&(sco
 function scopedGames(){return state.games.filter(matchScope)}
 function scopedAtBats(){const ids=new Set(scopedGames().map(g=>g.id));return state.atbats.filter(a=>ids.has(a.gameId))}
 function scopedPitching(){const ids=new Set(scopedGames().map(g=>g.id));return state.pitching.filter(p=>ids.has(p.gameId))}
-function renderScope(){const sel=$('scopeYear'),years=[...new Set(state.games.map(g=>schoolYear(g.date)).filter(Boolean))];years.push(String(new Date().getMonth()<3?new Date().getFullYear()-1:new Date().getFullYear()));years.sort((a,b)=>+b-+a);sel.innerHTML='<option value="all">全年度</option>'+years.map(y=>`<option value="${y}">${y}年度</option>`).join('');if(!years.includes(scopeYear))scopeYear='all';sel.value=scopeYear;$('scopeTeam').value=scopeTeam}
+function renderScope(){
+ const sel=$('scopeYear'),today=new Date();
+ const currentYear=today.getFullYear()-(today.getMonth()<3?1:0);
+ // Keep historical years and show the next school year automatically. Set avoids duplicates.
+ const years=[...new Set([...state.games.map(g=>schoolYear(g.date)).filter(Boolean),String(currentYear),String(currentYear+1)])].sort((a,b)=>+a-+b);
+ sel.innerHTML='<option value="all">全年度</option>'+years.map(y=>`<option value="${y}">${y}年度</option>`).join('');
+ if(!years.includes(scopeYear))scopeYear='all';
+ sel.value=scopeYear;$('scopeTeam').value=scopeTeam;
+}
 function changeScope(){scopeTeam=$('scopeTeam').value;scopeYear=$('scopeYear').value;activeGameId=null;renderScope();const current=document.querySelector('.screen.active')?.id||'home';if(current==='game')resetGameForm();show(current==='game'?'home':current)}
 
 let activeGameId=null,editingGameId=null,selectedResult=null,inningCount=6,detailPlayerId=null,detailTab='all',editingAtBatId=null;
